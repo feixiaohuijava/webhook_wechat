@@ -1,5 +1,5 @@
 webhook:
-  alertnames: {cpu: cpu利用率, memory: 内存利用率}
-  labels: [alertname,env,instance,job,serverity,src]
-  status: [descripition,summary]
-  webhook_url: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=2ea7dd9f-72c3-46fc-bd4e-e279a510dc3e
+  alertnames: {InstanceDown: InstanceDown,磁盘使用率: 磁盘使用率,CPU使用率: CPU使用率,IO持续读写: IO持续读写,IO持续读写延迟: IO持续读写延迟,NODE网卡流量: NODE网卡流量,网卡抖动: 网卡抖动,时钟偏移: 时钟偏移,内存可用率: 内存可用率,系统错误日志: 系统错误日志,内存不足预警（24小时）: 内存不足预警（24小时),k8s节点状态: k8s节点状态,TCP连接情况: TCP连接情况}
+  labels: [alertname,env,instance,job,severity,svc]
+  status: [description,summary]
+  webhook_url: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=82ccd573-af45-4220-bbe4-e0e51b41fd89

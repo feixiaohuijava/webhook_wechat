@@ -12,44 +12,61 @@ app.logger.addHandler(handler)
 @app.route('/api/webhook', methods=['POST'])
 def hello_world():
     app.logger.info("start")
+    yaml_data = tool.get_yaml_data()
+    if not yaml_data:
+        return jsonify({"msg": "获取配置文件出错!"})
+    alertnames_key = yaml_data['alertnames_key']
+
+    labels_key = yaml_data['labels_key']
+    status_key = yaml_data['status_key']
+    webhook_url_key = yaml_data['webhook_url_key']
+
     if request.data:
-        data = json.loads(request.data.decode('utf-8'))
-        app.logger.info(f"flask request data: {data}")
-        receiver = data['receiver']
-        status = data['status']
-        alerts = data['alerts']
-        yaml_data = tool.get_yaml_data()
-        if not yaml_data:
-            return jsonify({"msg": "获取配置文件出错!"})
-        alertnames_key = yaml_data['alertnames_key']
-
-        labels_key = yaml_data['labels_key']
-        status_key = yaml_data['status_key']
-        webhook_url_key = yaml_data['webhook_url_key']
-
-        alertname = alerts[0]["labels"]["alertname"]
-        alertnames_zh_key = alertnames_key[alertname]
-        wechat_heard = "监控指标名<font color='warning'>" + alertnames_zh_key + "</font>\n>"
-        wechat_label = ""
-        wechat_status = ""
-        content = wechat_heard
-        for each_alert in alerts:
-            labels = each_alert['labels']
-            annotations = each_alert['annotations']
-            for each_labels_key in labels_key:
-                wechat_label.join(each_labels_key + ":<font color='comment'>" + labels[each_labels_key] + "</font> \n>")
-            for each_status_key in status_key:
-                wechat_status.join(
-                    each_status_key + ":<font color='comment'>" + annotations[each_status_key] + "</font> \n>")
-            content = content.join(wechat_label).join(wechat_status)
-        payload = {
-            "msgtype": "markdown",
-            "markdown": {
-                "content": content
+        try:
+            data = json.loads(request.data.decode('utf-8'))
+            app.logger.info(f"flask request data: {data}")
+            receiver = data['receiver']
+            status = data['status']
+            alerts = data['alerts']
+            if not isinstance(alerts, list):
+                app.logger.error(f"alerts不是list,{alerts}")
+            alertname = alerts[0]["labels"]["alertname"]
+            alertnames_zh_key = alertnames_key[alertname]
+            if status == "firing":
+                wechat_heard = status + "[" + str(len(alerts)) + "]监控指标名<font color='warning'>" + alertnames_zh_key+ "</font>\n>"
+                content_list = [wechat_heard]
+                for each_alert in alerts:
+                    labels = each_alert['labels']
+                    wechat_label_list = []
+                    wechat_status_list = []
+                    for item in labels.keys():
+                        wechat_label = item + ":<font color='info'>" + labels.get(item) + "</font> \n>"
+                        wechat_label_list.append(wechat_label)
+                    annotations = each_alert['annotations']
+                    for item in annotations.keys():
+                        wechat_status = item + ":<font color='comment'>" + annotations.get(item) + "</font> \n>"
+                        wechat_status_list.append(wechat_status)
+                    wechat_status_list.append("<font color='warning'>--------------------</font>\n")
+                    each_alert_content = "".join(wechat_label_list + wechat_status_list)
+                    content_list.append(each_alert_content)
+                content = "".join(content_list)
+            elif status == "resolved":
+                wechat_heard = status + "监控指标名<font color='warning'>" + alertnames_zh_key + "</font>\n>"
+                content = wechat_heard
+            else:
+                content = "异常状态:" + status
+            payload = {
+                "msgtype": "markdown",
+                "markdown": {
+                    "content": content
+                }
             }
-        }
-        headers = {"Content-Type": "application/json"}
-        requests.post(url=webhook_url_key, data=json.dumps(payload), headers=headers)
+            headers = {"Content-Type": "application/json"}
+            app.logger.info(payload)
+            data = requests.post(url=webhook_url_key, data=json.dumps(payload), headers=headers)
+            app.logger.info(data)
+        except Exception as e:
+            app.logger.error(e)
         return jsonify({"msg": "执行任务成功"})
     else:
         return jsonify({"msg": f"alertmanager传的参数为空"})
