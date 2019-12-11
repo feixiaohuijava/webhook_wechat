@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import json
 import requests
 from tool import get_yaml_data
@@ -11,11 +11,13 @@ app = Flask(__name__)
 def hello_world():
     if request.data:
         data = json.loads(request.data.decode('utf-8'))
-        print(f"flask request data: {data}")
+        app.logger.info(f"flask request data: {data}")
         receiver = data['receiver']
         status = data['status']
         alerts = data['alerts']
         yaml_data = get_yaml_data()
+        if not yaml_data:
+            return jsonify({"msg": "获取配置文件出错!"})
         alertnames_key = yaml_data['alertnames_key']
 
         labels_key = yaml_data['labels_key']
@@ -45,7 +47,7 @@ def hello_world():
         }
         headers = {"Content-Type": "application/json"}
         requests.post(url=webhook_url_key, data=json.dumps(payload), headers=headers)
-    return "success"
+    return jsonify({"msg": "执行任务成功"})
 
 
 if __name__ == '__main__':

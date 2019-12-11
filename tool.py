@@ -10,7 +10,7 @@ def get_yaml_data():
         yaml_file = os.path.join(app.app.root_path, 'config', 'webhook.yaml')
         yaml_data = yaml.load(open(yaml_file), Loader=yaml.FullLoader)
     except Exception as e:
-        print(f"读取webhook.yaml配置文件出错,原因: {str(e)}")
+        app.logger.error(f"读取webhook.yaml配置文件出错,原因: {str(e)}")
         return None
     alertnames_key = yaml_data['webhook']['alertnames']
     labels_key = yaml_data['webhook']['labels']
