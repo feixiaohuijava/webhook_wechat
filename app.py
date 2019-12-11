@@ -11,14 +11,9 @@ app.logger.addHandler(handler)
 
 @app.route('/api/webhook', methods=['POST'])
 def hello_world():
-    app.logger.info("start")
     yaml_data = tool.get_yaml_data()
     if not yaml_data:
         return jsonify({"msg": "获取配置文件出错!"})
-    alertnames_key = yaml_data['alertnames_key']
-
-    labels_key = yaml_data['labels_key']
-    status_key = yaml_data['status_key']
     webhook_url_key = yaml_data['webhook_url_key']
 
     if request.data:
@@ -31,9 +26,8 @@ def hello_world():
             if not isinstance(alerts, list):
                 app.logger.error(f"alerts不是list,{alerts}")
             alertname = alerts[0]["labels"]["alertname"]
-            alertnames_zh_key = alertnames_key[alertname]
             if status == "firing":
-                wechat_heard = status + "[" + str(len(alerts)) + "]监控指标名<font color='warning'>" + alertnames_zh_key+ "</font>\n>"
+                wechat_heard = "**" + status + "[" + str(len(alerts)) + "]监控指标名**<font color='warning'>" + alertname+ "</font>\n>"
                 content_list = [wechat_heard]
                 for each_alert in alerts:
                     labels = each_alert['labels']
@@ -51,7 +45,7 @@ def hello_world():
                     content_list.append(each_alert_content)
                 content = "".join(content_list)
             elif status == "resolved":
-                wechat_heard = status + "监控指标名<font color='warning'>" + alertnames_zh_key + "</font>\n>"
+                wechat_heard = status + "监控指标名<font color='warning'>" + alertname + "</font>\n>"
                 content = wechat_heard
             else:
                 content = "异常状态:" + status
