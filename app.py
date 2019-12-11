@@ -1,21 +1,24 @@
 from flask import Flask, request, jsonify
 import json
 import requests
-from tool import get_yaml_data
+import tool
 import logging
 
 app = Flask(__name__)
+app.debug = True
+handler = logging.FileHandler('webhook_wechat.log')
+app.logger.addHandler(handler)
 
-
-@app.route('/api/webhook/one', methods=['POST'])
+@app.route('/api/webhook', methods=['POST'])
 def hello_world():
+    app.logger.info("start")
     if request.data:
         data = json.loads(request.data.decode('utf-8'))
         app.logger.info(f"flask request data: {data}")
         receiver = data['receiver']
         status = data['status']
         alerts = data['alerts']
-        yaml_data = get_yaml_data()
+        yaml_data = tool.get_yaml_data()
         if not yaml_data:
             return jsonify({"msg": "获取配置文件出错!"})
         alertnames_key = yaml_data['alertnames_key']
@@ -47,10 +50,7 @@ def hello_world():
         }
         headers = {"Content-Type": "application/json"}
         requests.post(url=webhook_url_key, data=json.dumps(payload), headers=headers)
-    return jsonify({"msg": "执行任务成功"})
+        return jsonify({"msg": "执行任务成功"})
+    else:
+        return jsonify({"msg": f"alertmanager传的参数为空"})
 
-
-if __name__ == '__main__':
-    handler = logging.FileHandler('webhook_wechat.log')
-    app.logger.addHandler(handler)
-    app.run(debug=False, host='0.0.0.0', port='5000')
