@@ -14,7 +14,8 @@ app.logger.addHandler(handler)
 def hello_world():
     yaml_data = tool.get_yaml_data()
     if not yaml_data:
-        return jsonify({"msg": "获取配置文件出错!"})
+        app.logger.error("配置文件有问题")
+        return jsonify({"msg": "ERROR,获取配置文件出错!"})
     webhook_url_key = yaml_data['webhook_url_key']
     if request.data:
         try:
@@ -62,6 +63,7 @@ def hello_world():
             app.logger.info(data)
         except Exception as e:
             app.logger.error(e)
-        return jsonify({"msg": "执行任务成功"})
+        return jsonify({"msg": "SUCCESS执行任务成功"})
     else:
-        return jsonify({"msg": f"alertmanager传的参数为空"})
+        app.logger.error("配置文件有问题")
+        return jsonify({"msg": f"ERROR,alertmanager传的参数为空"})
