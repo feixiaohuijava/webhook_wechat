@@ -9,13 +9,13 @@ app.debug = True
 handler = logging.FileHandler('webhook_wechat.log')
 app.logger.addHandler(handler)
 
+
 @app.route('/api/webhook', methods=['POST'])
 def hello_world():
     yaml_data = tool.get_yaml_data()
     if not yaml_data:
         return jsonify({"msg": "获取配置文件出错!"})
     webhook_url_key = yaml_data['webhook_url_key']
-
     if request.data:
         try:
             data = json.loads(request.data.decode('utf-8'))
@@ -27,7 +27,8 @@ def hello_world():
                 app.logger.error(f"alerts不是list,{alerts}")
             alertname = alerts[0]["labels"]["alertname"]
             if status == "firing":
-                wechat_heard = "**" + status + "[" + str(len(alerts)) + "]监控指标名**<font color='warning'>" + alertname+ "</font>\n>"
+                wechat_heard = "**" + status + "[" + str(
+                    len(alerts)) + "]监控指标名**<font color='warning'>" + alertname + "</font>\n>"
                 content_list = [wechat_heard]
                 for each_alert in alerts:
                     labels = each_alert['labels']
@@ -64,4 +65,3 @@ def hello_world():
         return jsonify({"msg": "执行任务成功"})
     else:
         return jsonify({"msg": f"alertmanager传的参数为空"})
-
