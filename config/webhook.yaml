@@ -1,0 +1,5 @@
+webhook:
+  alertnames: {cpu: cpu利用率, memory: 内存利用率}
+  labels: [alertname,env,instance,job,serverity,src]
+  status: [descripition,summary]
+  webhook_url: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=2ea7dd9f-72c3-46fc-bd4e-e279a510dc3e
